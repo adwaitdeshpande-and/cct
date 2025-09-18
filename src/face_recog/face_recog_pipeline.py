@@ -1,4 +1,16 @@
-"""Face recognition pipeline that matches person tracks against a gallery."""
+# <<<<<<< codex/create-detailed-project-repository-structure-wsjfp1
+# """Face recognition pipeline that matches person tracks against a gallery.
+
+# This module relies on the optional :mod:`face_recognition` dependency which in
+# turn requires ``face_recognition_models`` and ``dlib``. Those libraries are
+# notoriously difficult to install on some platforms (notably Windows). To keep
+# the overall pipeline robust we treat the dependency as optional and surface
+# clear diagnostics when it is missing so that callers can fall back to
+# alternatives such as InsightFace or DeepFace.
+# """
+# =======
+# """Face recognition pipeline that matches person tracks against a gallery."""
+# >>>>>>> master
 
 from __future__ import annotations
 
@@ -13,10 +25,37 @@ from typing import Dict, Iterable, List, Optional
 
 import numpy as np
 
-try:  # pragma: no cover - optional dependency
-    import face_recognition
-except Exception:  # pragma: no cover
-    face_recognition = None  # type: ignore
+# <<<<<<< codex/create-detailed-project-repository-structure-wsjfp1
+# import logging
+
+# LOGGER = logging.getLogger(__name__)
+
+# try:  # pragma: no cover - optional dependency
+#     import face_recognition
+# except Exception as exc:  # pragma: no cover
+#     face_recognition = None  # type: ignore
+#     _FACE_DEPENDENCY_ERROR = f"face_recognition import failed: {exc}"
+# else:  # pragma: no cover
+#     try:
+#         # ``face_recognition`` lazily imports the model weights package. Importing
+#         # it here lets us emit a controlled warning if the extra dependency is
+#         # absent instead of letting the library raise a RuntimeError later on.
+#         import face_recognition_models  # type: ignore  # noqa: F401
+
+#         _FACE_DEPENDENCY_ERROR = None
+#     except Exception as exc:  # pragma: no cover
+#         _FACE_DEPENDENCY_ERROR = (
+#             "face_recognition_models package is missing. Install it with "
+#             "`pip install face_recognition_models` or install an alternative "
+#             "face recognition backend. Original error: "
+#             f"{exc}"
+#         )
+# =======
+# try:  # pragma: no cover - optional dependency
+#     import face_recognition
+# except Exception:  # pragma: no cover
+#     face_recognition = None  # type: ignore
+# >>>>>>> master
 
 try:  # pragma: no cover
     from PIL import Image
@@ -63,6 +102,45 @@ def run_pipeline(
     threshold: float = 0.6,
     model: str = "hog",
 ) -> Dict[str, object]:
+    outdir.mkdir(parents=True, exist_ok=True)
+    results_path = outdir / "results.json"
+    csv_path = outdir / "results.csv"
+    summary_path = outdir / "summary.json"
+
+    if face_recognition is None or _FACE_DEPENDENCY_ERROR:
+        reason = _FACE_DEPENDENCY_ERROR or (
+            "face_recognition package is not installed."
+        )
+        LOGGER.warning("Face recognition skipped: %s", reason)
+
+        results_path.write_text("[]\n", encoding="utf-8")
+        with csv_path.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(
+                f,
+                fieldnames=[
+                    "track_id",
+                    "image_path",
+                    "match_name",
+                    "similarity",
+                    "face_index",
+                    "bbox",
+                ],
+            )
+            writer.writeheader()
+
+        summary = {
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "gallery_path": str(gallery_path),
+            "num_matches": 0,
+            "threshold": threshold,
+            "status": "skipped",
+            "reason": reason,
+        }
+        summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+        return summary
+
+    gallery = load_gallery(gallery_path)
+=======
     if face_recognition is None:
         raise RuntimeError("face_recognition is required for the face pipeline")
 
@@ -78,6 +156,18 @@ def run_pipeline(
         track_matches_dir = matches_dir / f"track_{track_id}"
         track_matches_dir.mkdir(parents=True, exist_ok=True)
         for image_path in sorted(track_dir.glob("*.jpg")):
+            try:
+                image = face_recognition.load_image_file(str(image_path))
+                locations = face_recognition.face_locations(image, model=model)
+                encodings = face_recognition.face_encodings(
+                    image, known_face_locations=locations
+                )
+            except Exception as exc:  # pragma: no cover - informative runtime failure
+                LOGGER.warning(
+                    "Failed to process %s with face_recognition: %s", image_path, exc
+                )
+                LOGGER.debug("face_recognition failure", exc_info=exc)
+                continue
             image = face_recognition.load_image_file(str(image_path))
             locations = face_recognition.face_locations(image, model=model)
             encodings = face_recognition.face_encodings(image, known_face_locations=locations)
@@ -105,6 +195,20 @@ def run_pipeline(
                     results.append(result)
 
     results_json = [match.to_dict() for match in results]
+    results_path.write_text(json.dumps(results_json, indent=2), encoding="utf-8")
+
+    with csv_path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "track_id",
+                "image_path",
+                "match_name",
+                "similarity",
+                "face_index",
+                "bbox",
+            ],
+        )
     (outdir / "results.json").write_text(json.dumps(results_json, indent=2), encoding="utf-8")
 
     csv_path = outdir / "results.csv"
@@ -119,6 +223,9 @@ def run_pipeline(
         "gallery_path": str(gallery_path),
         "num_matches": len(results_json),
         "threshold": threshold,
+        "status": "completed",
+    }
+    summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
     }
     (outdir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     return summary
