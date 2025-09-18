@@ -114,31 +114,42 @@ def run_pipeline(args: argparse.Namespace) -> None:
 
     if args.run_face and run_face_pipeline is not None:
         LOGGER.info("Running face recognition pipeline")
-        try:
-            face_summary = run_face_pipeline(
-                gallery_path=Path(args.gallery_path),
-                crops_root=crops_dir,
-                outdir=face_dir,
-                threshold=args.face_threshold,
-                model=args.face_model,
-            )
-        except Exception as exc:
-            LOGGER.warning("Face recognition module failed: %s", exc)
-        else:
-            summary_status = (
-                face_summary.get("status")
-                if isinstance(face_summary, dict)
-                else None
-            )
-            if summary_status == "completed":
-                modules_run.append("face_recognition")
-            else:
-                reason = (
-                    face_summary.get("reason")
-                    if isinstance(face_summary, dict)
-                    else "unknown reason"
-                )
-                LOGGER.warning("Face recognition skipped: %s", reason)
+# <<<<<<< codex/create-detailed-project-repository-structure-wsjfp1
+#         try:
+#             face_summary = run_face_pipeline(
+#                 gallery_path=Path(args.gallery_path),
+#                 crops_root=crops_dir,
+#                 outdir=face_dir,
+#                 threshold=args.face_threshold,
+#                 model=args.face_model,
+#             )
+#         except Exception as exc:
+#             LOGGER.warning("Face recognition module failed: %s", exc)
+#         else:
+#             summary_status = (
+#                 face_summary.get("status")
+#                 if isinstance(face_summary, dict)
+#                 else None
+#             )
+#             if summary_status == "completed":
+#                 modules_run.append("face_recognition")
+#             else:
+#                 reason = (
+#                     face_summary.get("reason")
+#                     if isinstance(face_summary, dict)
+#                     else "unknown reason"
+#                 )
+#                 LOGGER.warning("Face recognition skipped: %s", reason)
+# =======
+#         run_face_pipeline(
+#             gallery_path=Path(args.gallery_path),
+#             crops_root=crops_dir,
+#             outdir=face_dir,
+#             threshold=args.face_threshold,
+#             model=args.face_model,
+#         )
+#         modules_run.append("face_recognition")
+# >>>>>>> master
 
     if args.run_tamper:
         LOGGER.info("Running tamper checks")
