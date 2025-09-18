@@ -1,0 +1,28 @@
+{
+  "files": [
+    "README.md",
+    "requirements.txt",
+    "docker/Dockerfile.cpu",
+    "docker/Dockerfile.gpu",
+    "src/pipeline.py",
+    "src/forensics/preprocess.py",
+    "src/detection/yolo_infer.py",
+    "src/tracking/simple_tracker.py",
+    "src/tracking/appearance_tracker.py",
+    "src/tracking/export_crops_and_visualize.py",
+    "src/anpr/anpr_pipeline.py",
+    "src/anpr/aggregate_anpr_results.py",
+    "src/vehicle_recognition/vehicle_recognition.py",
+    "src/face_recog/gallery_manager.py",
+    "src/face_recog/face_recog_pipeline.py",
+    "src/tamper/tamper_detector.py",
+    "src/packager/manifest.py",
+    "src/packager/pdf_report.py",
+    "src/streamlit/app.py",
+    "streamlit_app/app.py",
+    "tests/test_hashing.py",
+    "tests/test_preprocess.py",
+    "notebooks/preprocess_demo.ipynb",
+    "notebooks/detect_tracking_demo.ipynb"
+  ]
+}
